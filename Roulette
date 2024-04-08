@@ -1,0 +1,128 @@
+use std::io;
+use rand::Rng;
+fn main() {
+    game();
+    game();
+}
+fn game() {
+    let black: [i32; 18] = [2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35];
+    let possiblebets: [&str; 9] = ["Red", "Black", "1st 18", "2nd 18", "Even", "Odd", "1st, 2nd or 3rd 12", "Collumns", "Individual Numbers"];
+    
+    println!("Welcome to Roulette");
+    println!("Betting is now open");
+    let mut userbets: [i32; 10] = [0,0,0,0,0,0,0,0,0,0];
+    let mut usercash: [i32; 10] = [0,0,0,0,0,0,0,0,0,0];
+    for indexo in 1..11{
+        println!("Catagories avalible:");
+        for n in 1..10 {
+            //let dex = usize::try_from(n-1).unwrap();
+            dump_string(&format!("{}: {}", n, possiblebets[usize::try_from(n-1).unwrap()]));
+        }
+        let input = get_input();
+        let choice: i32 = input.trim().parse().expect("Input not an integer");
+        dump_string(&format!("You selected: {}", possiblebets[usize::try_from(choice-1).unwrap()]));
+        if choice == 7 {
+            println!("Which Twelve?\n1: 1-12 \n2: 13-24 \n3: 25-36");
+            let input = get_input();
+            let choice: i32 = input.trim().parse().expect("Input not an integer");
+            userbets[indexo-1] = 70 + choice;
+        } else if choice == 8 {
+            println!("Which Collumn?\n1: 1,4,7... \n2: 2,5,8... \n3: 3,6,9");
+            let input = get_input();
+            let choice: i32 = input.trim().parse().expect("Input not an integer");
+            userbets[indexo-1] = 80 + choice;
+        } else if choice == 9 {
+            println!("Which number?");
+            let input = get_input();
+            let choice: i32 = input.trim().parse().expect("Input not an integer");
+            userbets[indexo-1] = 100 + choice;
+        }else{
+            userbets[indexo-1] = choice;
+        }
+        //dump_string(&format!("You selected: {}", possiblebets));
+        println!("How much money do you want to bet on this?");
+        let input = get_input();
+        let choice: i32 = input.trim().parse().expect("Input not an integer");
+        usercash[indexo-1] = choice;
+        println!("Do you want to continue placing bets?");
+        let ans = get_input();
+        let an = ans.trim().to_string();
+        let no = "no".to_string();
+        if an.eq(&no){
+            break;
+        }
+    }
+    println!("Betting is closed!");
+    let winningnum = spin();
+    println!("Spinning wheel... \n{} was landed on!", winningnum);
+    let mut winnings = 0;
+    let mut loss = 0;
+    for i in 0..10 {
+        let bet = userbets[i];
+        if bet == 0 {
+            break;
+        }
+        let norm = winnings; 
+        //println!("{}", bet);
+        let cash = &usercash[i];
+        //println!("{}", cash);
+        loss += cash;
+        if bet == 1 && !black.contains(&winningnum) {
+            winnings += cash * 2;
+        } else if bet == 2 && black.contains(&winningnum) {
+            winnings += cash * 2;
+        } else if bet == 3 && winningnum < 19 {
+            winnings += cash * 2;
+        } else if bet == 4 && winningnum > 18 {
+            winnings += cash * 2;
+        } else if bet == 5 && winningnum % 2 == 0 {
+            winnings += cash * 2;
+        } else if bet == 6 && winningnum % 2 == 1 {
+            winnings += cash * 2;
+        } else if bet == 71 || bet == 72 || bet == 73{
+            if winningnum <= (bet-70) * 12 && winningnum >= (bet-71) * 12 {
+                winnings += cash * 3;
+            }
+        } else if bet > 80 && bet < 84 {
+            if is_in_col(winningnum, bet-80) {
+                winnings += cash * 3;
+            }
+        } else {
+            if winningnum == (bet - 100) {
+                winnings += cash * 35;
+            }
+        }
+        if winnings == norm {
+            println!("Your bet number {} has failed, you lost {}", i + 1, userbets[i]);
+        }
+        
+    }
+    //println!("Spinning wheel... \n{} was landed on!", winningnum);
+    winnings -= loss;
+    println!("You made ${}", winnings);
+
+}
+fn is_in_col(n: i32, col: i32) -> bool {
+    let mut c = 1;
+    if n % 3 == 0 {
+        c = 3;
+    } else if (n-1) % 3 == 0 {
+        c = 2;
+    }
+    if c == col {
+        return true;
+    }
+    return false;
+}
+fn get_input() -> String {
+    let mut input = String::new();
+    let _n = io::stdin().read_line(&mut input).unwrap();
+    return input;
+}
+fn spin() -> i32{
+    let m = rand::thread_rng().gen_range(0..37);
+    return m;
+}
+fn dump_string(s: &String){
+    println!("{}", s);
+}
