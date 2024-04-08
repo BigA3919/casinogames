@@ -1,0 +1,150 @@
+use std::io;
+use rand::Rng;
+fn main() {
+    blackjackgame();
+    //Blackjackgame();
+}
+fn blackjackgame(){
+    println!("Welcome to BlackJack"); 
+    let mut userhasace = false;
+    let mut dealerhasace = false;
+    let mut userval = 0;
+    let mut dealerval = 0;
+    let cardarr: [&str; 14] = ["", "n Ace", " Two", " Three", " Four", " Five", " Six", " Seven", "n Eight", " Nine", " Ten", " Jack", " Queen", " King"];
+    let usercard1 = rand_card();
+    let usercard2 = rand_card();
+    let dealercard1 = rand_card();
+    let dealercard2 = rand_card(); 
+    
+    if usercard1 == 1 || usercard2 == 1 {
+        userhasace = true;
+    }
+    if dealercard1 == 1 || dealercard2 == 1 {
+        dealerhasace = true;
+    }
+    let co1 = usize::try_from(usercard1).unwrap();
+    let co2 = usize::try_from(usercard2).unwrap();
+    dump_string(&format!("Your cards are a{} and a{}", cardarr[co1], cardarr[co2]));
+    let usercard1 = fix_card(usercard1);
+    let usercard2 = fix_card(usercard2);
+    userval = usercard1 + usercard2;
+    let co2 = usize::try_from(dealercard2).unwrap();
+    dump_string(&format!("The dealer's cards are ? and a{}", cardarr[co2]));
+    if userval == 11 && userhasace {
+        println!("BlackJack! You win!");
+        std::process::abort();
+    }
+    loop{
+        if userhasace && userval + 10 < 22 {
+            dump_string(&format!("Your current tally is {} or {}.", userval, userval + 10));
+        }else{
+            dump_string(&format!("Your current tally is {}.", userval));
+        }
+        println!("hit or hold");
+        let h = "hit".to_string();
+        let b = get_input();
+        let r = b.trim().to_string();
+        dump_string(&r);
+        if r.eq(&h) {
+            let newcard = rand_card();
+            let co1 = usize::try_from(newcard).unwrap();
+            dump_string(&format!("You pulled a{}", cardarr[co1]));
+            let newcard = fix_card(newcard);
+            if newcard == 1 && !userhasace {
+                userhasace = true;
+            }
+            userval += newcard;
+            if userval > 21 {
+                dump_string(&format!("Your busted with {}.", userval));
+                std::process::abort();
+            }
+            
+            if userval == 21 {
+                println!("BlackJack! You win!");
+                std::process::abort();
+            }
+        }else{
+            if userhasace && userval + 10 < 22 {
+                dump_string(&format!("Your final tally is {}.", userval + 10));
+            }else{
+                dump_string(&format!("Your final tally is {}.", userval));
+            }
+            break;
+        }
+    }
+    let co1 = usize::try_from(dealercard1).unwrap();
+    //let co2 = usize::try_from(card2).unwrap();
+    dump_string(&format!("The Dealer's cards are a{} and a{}", cardarr[co1], cardarr[co2]));
+    let dealercard1 = fix_card(dealercard1);
+    let dealercard2 = fix_card(dealercard2);
+    //fix_card(newcard);
+    dealerval = dealercard1 + dealercard2;
+    if dealerhasace == true && dealerval + 10 < 22 {
+        if dealerval == 11 {
+            println!("BlackJack! The dealer wins!");
+            std::process::abort();
+        }
+        if dealerval + 10 > userval {
+            dealerval += 10;
+        }
+    }
+    loop{
+        if dealerval < 17 {
+            let newcard = rand_card();
+            let co1 = usize::try_from(newcard).unwrap();
+            dump_string(&format!("The dealer pulled a{}", cardarr[co1]));
+            let newcard = fix_card(newcard);
+            dealerval += newcard;
+            if dealerval > 21 {
+                dump_string(&format!("The dealer busted with {}.", dealerval));
+                std::process::abort();
+            }
+            if dealerval == 21 {
+                println!("BlackJack! The dealer wins!");
+                std::process::abort();
+            }
+            if dealerval + 10 < 22 && dealerhasace {
+                if dealerval == 11 {
+                    println!("BlackJack! The dealer wins!");
+                    std::process::abort();
+                }
+                if dealerval + 10 > userval && dealerval + 10 > 16 {
+                    dealerval += 10;
+                }
+            }
+        }else{
+            if userhasace && userval + 10 < 22 {
+                userval += 10;
+            } 
+            dump_string(&format!("Your final tally is {}.", userval));
+            dump_string(&format!("The dealer's final tally is {}.", dealerval));
+            if userval > dealerval {
+                println!("You beat the dealer!");
+            }else if userval < dealerval {
+                println!("You lost!");
+            }else{
+                println!("You tied with the dealer!");
+            }
+            std::process::abort();
+        }
+    }
+}
+fn get_input() -> String {
+    let mut input = String::new();
+    let _n = io::stdin().read_line(&mut input).unwrap();
+    return input;
+}
+fn dump_string(s: &String){
+    println!("{}", s);
+}
+fn rand_card() -> i32{
+    let m = rand::thread_rng().gen_range(1..14);
+    return m;
+}
+fn fix_card(n:i32) -> i32 {
+    let mut m = n;
+    if m > 10 {
+        m = 10;
+    }
+    return m;
+}
